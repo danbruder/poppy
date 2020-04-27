@@ -26,7 +26,7 @@ pub async fn run() {
         ppy_graphql::schema(),
     ));
 
-    log::info!("Listening on 127.0.0.1:8080");
+    log::info!("Listening on 127.0.0.1:8888");
 
     let routes = (warp::path("subscriptions")
         .and(warp::ws())
@@ -54,5 +54,5 @@ pub async fn run() {
     .or(homepage)
     .with(log);
 
-    warp::serve(routes).run(([127, 0, 0, 1], 8080)).await;
+    warp::serve(routes).run(([127, 0, 0, 1], 8888)).await;
 }
