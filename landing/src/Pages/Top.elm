@@ -37,7 +37,7 @@ view =
 hero : Html Msg
 hero =
     div [ class "flex justify-center items center w-full" ]
-        [ div [ class "p-6 bg-white max-w-md rounded shadow-lg" ] [ img [ src "/img/portrait.jpg" ] [] ]
+        [ div [ class "p-6 bg-white max-w-md rounded shadow-lg" ] [ img [ src "https://via.placeholder.com/800x600.jpg" ] [] ]
         , div [ class "w-1/2 p-6 " ]
             [ h1 [ class "flex text-4xl text-blue-800" ]
                 [ text "Keep your memories safe"
