@@ -13,4 +13,3 @@ serde = { version = "1.0.105", features = ["derive"] }
 serde_json = "1.0.50"
 tokio = { version = "0.2", features = ["full"] }
 warp = "0.2.1"
-ppy_graphql = { path = "../graphql" }
