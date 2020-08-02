@@ -1,6 +1,6 @@
 module Pages.Top exposing (Flags, Model, Msg, page)
 
-import Html
+import Html exposing (..)
 import Page exposing (Document, Page)
 
 
@@ -26,5 +26,10 @@ page =
 view : Document Msg
 view =
     { title = "Top"
-    , body = [ Html.text "Top" ]
+    , body = [ viewBody ]
     }
+
+
+viewBody : Html Msg
+viewBody =
+    div [] [ text "Poppy photos" ]
