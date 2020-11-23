@@ -1,0 +1,23 @@
+[package]
+name = "p_server"
+version = "0.1.0"
+authors = ["Dan Bruder <danbruder@hey.com>"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+[dependencies]
+env_logger = "0.8.1"
+futures = "0.3.1"
+log = "0.4.8"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+tokio = { version = "0.2", features = ["rt-core", "macros"] }
+warp = "0.2.1"
+
+juniper_codegen = { git = "https://github.com/graphql-rust/juniper", rev = "f3170c7adf4405cc119d2129f78a591fe2fcd32b"}
+juniper = { git = "https://github.com/graphql-rust/juniper", rev = "f3170c7adf4405cc119d2129f78a591fe2fcd32b"  }
+juniper_warp = { git = "https://github.com/graphql-rust/juniper", rev = "f3170c7adf4405cc119d2129f78a591fe2fcd32b", features = ["subscriptions"]}
+juniper_subscriptions = { git = "https://github.com/graphql-rust/juniper", rev = "f3170c7adf4405cc119d2129f78a591fe2fcd32b"}
+juniper_graphql_ws = { git = "https://github.com/graphql-rust/juniper", rev = "f3170c7adf4405cc119d2129f78a591fe2fcd32b"}
+
+

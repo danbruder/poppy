@@ -1,0 +1,22 @@
+# Go from mac to staging
+PGPASSWORD=postgres pg_dump -w -Fc -O -U postgres punch_dev | PGPASSWORD=Sv2NCBwNV5 pg_restore -U nanobox -w -Fc -O
+
+# Send to restic
+PGPASSWORD=${DATA_DB_NANOBOX_PASS} pg_dump -w -Fc -O -U ${DATA_DB_USER} -h ${DATA_DB_HOST} -d punch_prod | gzip | ./restic backup --stdin --stdin-filename punch_prod.sql.tar.gz
+
+# connect to tunnel
+nanobox tunnel data.db -p 5555
+PGPASSWORD=vgeWN1KcFp psql -h localhost -p 5555 -U nanobox -d punch_prod
+PGPASSWORD=vgeWN1KcFp pg_restore -w -Fc -O -h localhost -p 5555 -U nanobox 
+
+
+# from master to local 
+nanobox tunnel data.db -p 5555
+PGPASSWORD=${PW} pg_dump -w -Fc -O -U nanobox -h localhost -p 5555 -d punch_prod | PGPASSWORD=Sv2NCBwNV5 pg_restore -U nanobox -w -Fc -O
+
+
+# From file to master
+nanobox tunnel data.db -p 5555
+PGPASSWORD=postgres pg_dump -w -Fc -O -U postgres punch_dev > ~/Desktop/final.pgsql
+mv ~/Desktop/final.pgsql ~/Desktop/all_data.sql
+PGPASSWORD=vgeWN1KcFp pg_restore -w -Fc -O -h localhost -p 5555 -U nanobox  ~/Desktop/all_data.sql
