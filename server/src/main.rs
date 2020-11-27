@@ -1,149 +1,52 @@
-//! This example demonstrates asynchronous subscriptions with warp and tokio 0.2
+use futures::FutureExt as _;
+use std::{env, sync::Arc};
+#[macro_use]
+extern crate lazy_static;
 
-use std::{env, pin::Pin, sync::Arc, time::Duration};
+use std::convert::Infallible;
 
-use futures::{FutureExt as _, Stream};
-use juniper::{
-    graphql_object, graphql_subscription, DefaultScalarValue, EmptyMutation, FieldError,
-    GraphQLEnum, RootNode,
-};
 use juniper_graphql_ws::ConnectionConfig;
 use juniper_warp::{playground_filter, subscriptions::serve_graphql_ws};
-use warp::{http::Response, Filter};
+use serde_derive::Serialize;
+use sqlx::sqlite::SqlitePool;
+use warp::{http::Response, http::StatusCode, Filter};
+use warp::{Rejection, Reply};
 
-#[derive(Clone)]
-struct Context {}
+mod db;
+mod entities;
+mod graphql;
+mod repo;
+mod result;
+mod use_cases;
 
-impl juniper::Context for Context {}
+#[cfg(test)]
+mod integration_tests;
 
-#[derive(Clone, Copy, GraphQLEnum)]
-enum UserKind {
-    Admin,
-    User,
-    Guest,
+use graphql::{schema, Context};
+
+lazy_static! {
+    pub static ref POOL: SqlitePool = db::setup();
+    static ref DOMAIN: String = "localhost".into();
 }
 
-struct User {
-    id: i32,
-    kind: UserKind,
-    name: String,
-}
-
-// Field resolvers implementation
-#[graphql_object(context = Context)]
-impl User {
-    fn id(&self) -> i32 {
-        self.id
-    }
-
-    fn kind(&self) -> UserKind {
-        self.kind
-    }
-
-    fn name(&self) -> &str {
-        &self.name
-    }
-
-    async fn friends(&self) -> Vec<User> {
-        if self.id == 1 {
-            return vec![
-                User {
-                    id: 11,
-                    kind: UserKind::User,
-                    name: "user11".into(),
-                },
-                User {
-                    id: 12,
-                    kind: UserKind::Admin,
-                    name: "user12".into(),
-                },
-                User {
-                    id: 13,
-                    kind: UserKind::Guest,
-                    name: "user13".into(),
-                },
-            ];
-        } else if self.id == 2 {
-            return vec![User {
-                id: 21,
-                kind: UserKind::User,
-                name: "user21".into(),
-            }];
-        } else if self.id == 3 {
-            return vec![
-                User {
-                    id: 31,
-                    kind: UserKind::User,
-                    name: "user31".into(),
-                },
-                User {
-                    id: 32,
-                    kind: UserKind::Guest,
-                    name: "user32".into(),
-                },
-            ];
-        } else {
-            return vec![];
-        }
-    }
-}
-
-struct Query;
-
-#[graphql_object(context = Context)]
-impl Query {
-    async fn users(id: i32) -> Vec<User> {
-        vec![User {
-            id,
-            kind: UserKind::Admin,
-            name: "User Name".into(),
-        }]
-    }
-}
-
-type UsersStream = Pin<Box<dyn Stream<Item = Result<User, FieldError>> + Send>>;
-
-struct Subscription;
-
-#[graphql_subscription(context = Context)]
-impl Subscription {
-    async fn users() -> UsersStream {
-        let mut counter = 0;
-        let stream = tokio::time::interval(Duration::from_secs(5)).map(move |_| {
-            counter += 1;
-            if counter == 2 {
-                Err(FieldError::new(
-                    "some field error from handler",
-                    Value::Scalar(DefaultScalarValue::String(
-                        "some additional string".to_string(),
-                    )),
-                ))
-            } else {
-                Ok(User {
-                    id: counter,
-                    kind: UserKind::Admin,
-                    name: "stream user".to_string(),
-                })
-            }
-        });
-
-        Box::pin(stream)
-    }
-}
-
-type Schema = RootNode<'static, Query, EmptyMutation<Context>, Subscription>;
-
-fn schema() -> Schema {
-    Schema::new(Query, EmptyMutation::new(), Subscription)
-}
-
-#[tokio::main]
+#[tokio::main] // or #[tokio::main]
 async fn main() {
-    env::set_var("RUST_LOG", "warp_subscriptions");
+    env::set_var("RUST_LOG", "app");
+
+    // Initialize resources
     env_logger::init();
+    result::init_error_tracking();
+    db::migrate().await;
 
+    let routes = get_routes();
+
+    log::info!("Listening on 127.0.0.1:8080");
+    warp::serve(routes).run(([127, 0, 0, 1], 8080)).await;
+}
+
+pub fn get_routes() -> impl warp::Filter<Extract = impl Reply> + Clone {
     let log = warp::log("warp_subscriptions");
-
+    // Create a connection pool
     let homepage = warp::path::end().map(|| {
         Response::builder()
             .header("content-type", "text/html")
@@ -156,9 +59,7 @@ async fn main() {
 
     let root_node = Arc::new(schema());
 
-    log::info!("Listening on 127.0.0.1:8080");
-
-    let routes = (warp::path("subscriptions")
+    let subs_route = warp::path("subscriptions")
         .and(warp::ws())
         .map(move |ws: warp::ws::Ws| {
             let root_node = root_node.clone();
@@ -171,19 +72,73 @@ async fn main() {
                     })
                     .await
             })
-        }))
-    .map(|reply| {
-        // TODO#584: remove this workaround
-        warp::reply::with_header(reply, "Sec-WebSocket-Protocol", "graphql-ws")
-    })
-    .or(warp::post()
-        .and(warp::path("graphql"))
-        .and(qm_graphql_filter))
-    .or(warp::get()
-        .and(warp::path("playground"))
-        .and(playground_filter("/graphql", Some("/subscriptions"))))
-    .or(homepage)
-    .with(log);
+        })
+        .map(|reply| warp::reply::with_header(reply, "Sec-WebSocket-Protocol", "graphql-ws"));
 
-    warp::serve(routes).run(([127, 0, 0, 1], 8080)).await;
+    let graphql_route = warp::post()
+        .and(warp::path("graphql"))
+        .and(qm_graphql_filter);
+
+    let playground_route = warp::get()
+        .and(warp::path("playground"))
+        .and(playground_filter("/graphql", Some("/subscriptions")));
+
+    let register_route = warp::post()
+        .and(warp::path("register"))
+        .and(warp::body::content_length_limit(1024 * 32))
+        .and(warp::body::json())
+        .and_then(|body: serde_json::Value| async {
+            use_cases::register::run(body)
+                .await
+                .map(|session_id| {
+                    let reply = warp::reply::json(&"success");
+                    warp::reply::with_header(
+                        reply,
+                        "Set-Cookie",
+                        format!(
+                            "session={}; Domain={}; Secure; HttpOnly",
+                            session_id,
+                            DOMAIN.as_str()
+                        ),
+                    )
+                })
+                .map_err(|_| warp::reject::not_found())
+        });
+
+    subs_route
+        .or(graphql_route)
+        .or(playground_route)
+        .or(homepage)
+        .or(register_route)
+        .recover(handle_rejection)
+        .with(log)
+}
+
+/// An API error serializable to JSON.
+#[derive(Serialize)]
+struct ErrorMessage {
+    code: u16,
+    message: String,
+}
+
+// This function receives a `Rejection` and tries to return a custom
+// value, otherwise simply passes the rejection along.
+async fn handle_rejection(err: Rejection) -> Result<impl Reply, Infallible> {
+    let code;
+    let message;
+
+    if err.is_not_found() {
+        code = StatusCode::NOT_FOUND;
+        message = "NOT_FOUND";
+    } else {
+        code = StatusCode::INTERNAL_SERVER_ERROR;
+        message = "UNHANDLED_REJECTION";
+    }
+
+    let json = warp::reply::json(&ErrorMessage {
+        code: code.as_u16(),
+        message: message.into(),
+    });
+
+    Ok(warp::reply::with_status(json, code))
 }

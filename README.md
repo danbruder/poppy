@@ -1,3 +1,5 @@
-# Poppy
+# ⏰ Punch Time Tracking
 
-Like Google photos, but where google employees cant see your personal stuff
+Simple time tracking tool
+
+![screenshot](https://github.com/danbruder/punch/raw/main/screenshot.jpg)
