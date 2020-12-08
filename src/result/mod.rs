@@ -120,3 +120,9 @@ impl std::convert::From<std::env::VarError> for Error {
         Error::InternalServerError(format!("{:?}", e))
     }
 }
+
+impl std::convert::From<bcrypt::BcryptError> for Error {
+    fn from(e: bcrypt::BcryptError) -> Error {
+        Error::InternalServerError(format!("{:?}", e))
+    }
+}

@@ -1,15 +1,16 @@
-use crate::result::Result;
-use crate::POOL;
-use chrono::Utc;
-use uuid::Uuid;
-
 use crate::repo::UserRepo;
+use crate::result::Result;
 
-struct UserUseCase<'a, U>
+pub struct UserUseCase<'a, U>
 where
     U: UserRepo,
 {
     user_repo: &'a U,
+}
+
+pub struct RegisterRequest<'a> {
+    pub email: &'a str,
+    pub password: &'a str,
 }
 
 impl<'a, U> UserUseCase<'a, U>
@@ -20,7 +21,17 @@ where
         Self { user_repo }
     }
 
-    pub fn register(&self, body: ()) -> Result<()> {
+    pub async fn register(&self, body: &RegisterRequest<'_>) -> Result<()> {
+        let existing_user = self.user_repo.by_email(body.email).await?;
+
+        let hashed = bcrypt::hash(&body.password, bcrypt::DEFAULT_COST)?;
+
         Ok(())
     }
+}
+
+#[cfg(test)]
+mod test {
+    #[tokio::test]
+    async fn test_register() {}
 }

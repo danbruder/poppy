@@ -5,6 +5,7 @@ use uuid::Uuid;
 
 use crate::entities::*;
 use crate::repo::*;
+use crate::result::*;
 
 lazy_static! {
     pub static ref POOL: SqlitePool = setup();
@@ -28,5 +29,9 @@ struct DbUserRepo {}
 impl UserRepo for DbUserRepo {
     async fn by_id(&self, id: Uuid) -> Option<User> {
         None
+    }
+
+    async fn by_email(&self, email: &str) -> Result<Option<User>> {
+        Ok(None)
     }
 }
