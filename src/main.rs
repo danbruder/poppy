@@ -70,6 +70,8 @@ pub fn get_routes() -> impl warp::Filter<Extract = impl Reply> + Clone {
 
     let root_node = Arc::new(schema());
 
+    let public_files = warp::path("public").and(warp::fs::dir("data/files"));
+
     let subs_route = warp::path("subscriptions")
         .and(warp::ws())
         .map(move |ws: warp::ws::Ws| {
@@ -124,6 +126,7 @@ pub fn get_routes() -> impl warp::Filter<Extract = impl Reply> + Clone {
         .or(playground_route)
         .or(homepage)
         .or(register_route)
+        .or(public_files)
         .recover(handle_rejection)
         .with(log)
         .with(cors)

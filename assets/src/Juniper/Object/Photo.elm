@@ -22,3 +22,8 @@ import Juniper.Union
 uri : SelectionSet String Juniper.Object.Photo
 uri =
     Object.selectionForField "String" "uri" [] Decode.string
+
+
+publicUrl : SelectionSet String Juniper.Object.Photo
+publicUrl =
+    Object.selectionForField "String" "publicUrl" [] Decode.string

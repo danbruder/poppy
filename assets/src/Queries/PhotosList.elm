@@ -21,7 +21,7 @@ type alias Payload =
 
 photoSelection =
     SelectionSet.succeed Photo
-        |> with Photo.uri
+        |> with Photo.publicUrl
 
 
 query : SelectionSet Payload RootQuery

@@ -1,5 +1,4 @@
-use derive_more::{AsRef, Deref, From, Into};
-use juniper::{graphql_object, EmptySubscription, GraphQLObject, RootNode};
+use juniper::{graphql_object, EmptySubscription, RootNode};
 
 use crate::db::PhotoRepo;
 use crate::entities::Photo;
@@ -50,5 +49,9 @@ impl Mutation {
 impl Photo {
     fn uri(&self) -> &str {
         self.uri()
+    }
+
+    fn public_url(&self) -> String {
+        self.public_url()
     }
 }
