@@ -1,5 +1,6 @@
 use futures::FutureExt as _;
 use std::{env, sync::Arc};
+
 #[macro_use]
 extern crate lazy_static;
 
@@ -9,6 +10,7 @@ use dotenv::dotenv;
 use juniper_graphql_ws::ConnectionConfig;
 use juniper_warp::{playground_filter, subscriptions::serve_graphql_ws};
 use serde_derive::Serialize;
+use sqlx::sqlite::SqlitePool;
 use warp::{http::Response, http::StatusCode, Filter};
 use warp::{Rejection, Reply};
 
@@ -25,7 +27,7 @@ mod integration_tests;
 use graphql::{schema, Context};
 
 lazy_static! {
-    //pub static ref POOL: SqlitePool = db::setup();
+    pub static ref POOL: SqlitePool = db::setup();
     static ref DOMAIN: String = "localhost".into();
 }
 
@@ -38,7 +40,7 @@ async fn main() {
     // Initialize resources
     env_logger::init();
     result::init_error_tracking();
-    //db::migrate().await;
+    db::migrate().await;
 
     let routes = get_routes();
 

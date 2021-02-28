@@ -7,21 +7,21 @@ use crate::entities::*;
 use crate::repo::*;
 use crate::result::*;
 
-// lazy_static! {
-//     pub static ref POOL: SqlitePool = setup();
-// }
+lazy_static! {
+    pub static ref POOL: SqlitePool = setup();
+}
 
-// pub fn setup() -> SqlitePool {
-//     SqlitePool::connect_lazy(&env::var("DATABASE_URL").expect("DATABASE_URL required"))
-//         .expect("Could not connect to database")
-// }
+pub fn setup() -> SqlitePool {
+    SqlitePool::connect_lazy(&env::var("DATABASE_URL").expect("DATABASE_URL required"))
+        .expect("Could not connect to database")
+}
 
-// pub async fn migrate() {
-//     sqlx::migrate!()
-//         .run(&*POOL)
-//         .await
-//         .expect("Failed to run migrations");
-// }
+pub async fn migrate() {
+    sqlx::migrate!()
+        .run(&*POOL)
+        .await
+        .expect("Failed to run migrations");
+}
 
 pub struct DbUserRepo {}
 
