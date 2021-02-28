@@ -6,9 +6,12 @@ extern crate lazy_static;
 
 use std::convert::Infallible;
 
+use bytes::Buf;
 use dotenv::dotenv;
-use juniper_graphql_ws::ConnectionConfig;
-use juniper_warp::{playground_filter, subscriptions::serve_graphql_ws};
+use futures::stream::TryStreamExt;
+use futures::Stream;
+use mime::Mime;
+use mpart_async::server::MultipartStream;
 use serde_derive::Serialize;
 use sqlx::sqlite::SqlitePool;
 use warp::{http::Response, http::StatusCode, Filter};
@@ -17,6 +20,7 @@ use warp::{Rejection, Reply};
 mod db;
 mod entities;
 mod graphql;
+mod juniper_warp;
 mod repo;
 mod result;
 mod use_cases;
@@ -72,29 +76,9 @@ pub fn get_routes() -> impl warp::Filter<Extract = impl Reply> + Clone {
 
     let public_files = warp::path("public").and(warp::fs::dir("data/files"));
 
-    let subs_route = warp::path("subscriptions")
-        .and(warp::ws())
-        .map(move |ws: warp::ws::Ws| {
-            let root_node = root_node.clone();
-            ws.on_upgrade(move |websocket| async move {
-                serve_graphql_ws(websocket, root_node, ConnectionConfig::new(Context::new()))
-                    .map(|r| {
-                        if let Err(e) = r {
-                            println!("Websocket error: {}", e);
-                        }
-                    })
-                    .await
-            })
-        })
-        .map(|reply| warp::reply::with_header(reply, "Sec-WebSocket-Protocol", "graphql-ws"));
-
     let graphql_route = warp::post()
         .and(warp::path("graphql"))
         .and(qm_graphql_filter);
-
-    let playground_route = warp::get()
-        .and(warp::path("playground"))
-        .and(playground_filter("/graphql", Some("/subscriptions")));
 
     let register_route = warp::post()
         .and(warp::path("register"))
@@ -121,11 +105,22 @@ pub fn get_routes() -> impl warp::Filter<Extract = impl Reply> + Clone {
                 .map_err(|_| warp::reject::not_found())
         });
 
-    subs_route
-        .or(graphql_route)
+    let playground_route = warp::get()
+        .and(warp::path("playground"))
+        .and(juniper_warp::playground_filter("/graphql", None));
+
+    // Upload route
+    let upload = warp::path!("upload")
+        .and(warp::post())
+        .and(warp::header::<Mime>("content-type"))
+        .and(warp::body::stream())
+        .and_then(mpart);
+
+    graphql_route
         .or(playground_route)
         .or(homepage)
         .or(register_route)
+        .or(upload)
         .or(public_files)
         .recover(handle_rejection)
         .with(log)
@@ -159,4 +154,29 @@ async fn handle_rejection(err: Rejection) -> Result<impl Reply, Infallible> {
     });
 
     Ok(warp::reply::with_status(json, code))
+}
+
+async fn mpart(
+    mime: Mime,
+    body: impl Stream<Item = Result<impl Buf, warp::Error>> + Unpin,
+) -> Result<impl warp::Reply, Infallible> {
+    let boundary = mime.get_param("boundary").map(|v| v.to_string()).unwrap();
+
+    let mut stream = MultipartStream::new(
+        boundary,
+        body.map_ok(|mut buf| buf.copy_to_bytes(buf.remaining())),
+    );
+
+    while let Ok(Some(mut field)) = stream.try_next().await {
+        println!("Field received:{}", field.name().unwrap());
+        if let Ok(filename) = field.filename() {
+            println!("Field filename:{}", filename);
+        }
+
+        while let Ok(Some(bytes)) = field.try_next().await {
+            println!("Bytes received:{}", bytes.len());
+        }
+    }
+
+    Ok(format!("Thanks!\n"))
 }
