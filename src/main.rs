@@ -171,10 +171,10 @@ async fn mpart(
         println!("Field received:{}", field.name().unwrap());
         if let Ok(filename) = field.filename() {
             println!("Field filename:{}", filename);
-        }
 
-        while let Ok(Some(bytes)) = field.try_next().await {
-            println!("Bytes received:{}", bytes.len());
+            while let Ok(Some(bytes)) = field.try_next().await {
+                println!("Bytes received:{}", bytes.len());
+            }
         }
     }
 

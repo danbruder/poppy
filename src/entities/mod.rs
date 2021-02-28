@@ -1,5 +1,9 @@
 pub struct User {}
 
+pub struct File {
+    path: String,
+}
+
 pub struct Photo {
     pub uri: String,
 }
