@@ -1,31 +1,54 @@
-use juniper::{graphql_object, EmptyMutation, EmptySubscription, GraphQLObject, RootNode};
+use derive_more::{AsRef, Deref, From, Into};
+use juniper::{graphql_object, EmptySubscription, GraphQLObject, RootNode};
 
+use crate::db::PhotoRepo;
+use crate::entities::Photo;
 use crate::result::Result;
+use crate::use_cases::PhotoUseCase;
 
 #[derive(Clone)]
-pub struct Context {}
+pub struct Context {
+    photo: PhotoUseCase<PhotoRepo>,
+}
 
 impl juniper::Context for Context {}
 
-pub type Schema = RootNode<'static, Query, EmptyMutation<Context>, EmptySubscription<Context>>;
+impl Context {
+    pub fn new() -> Self {
+        Self {
+            photo: PhotoUseCase::new(PhotoRepo {}),
+        }
+    }
+}
+
+pub type Schema = RootNode<'static, Query, Mutation, EmptySubscription<Context>>;
 
 pub fn schema() -> Schema {
-    Schema::new(Query, EmptyMutation::new(), EmptySubscription::new())
+    Schema::new(Query, Mutation, EmptySubscription::new())
 }
 
 pub struct Query;
+pub struct Mutation;
 
 #[graphql_object(context = Context)]
 impl Query {
-    pub fn photos() -> Result<Vec<Photo>> {
-        let photos = vec![];
-        Ok(photos)
+    pub async fn photos(context: &Context) -> Result<Vec<Photo>> {
+        context.photo.list().await
+    }
+}
+
+#[graphql_object(context = Context)]
+impl Mutation {
+    pub fn hello() -> String {
+        "world".into()
     }
 }
 
 // Photos
 
-#[derive(GraphQLObject)]
-struct Photo {
-    url: String,
+#[graphql_object]
+impl Photo {
+    fn uri(&self) -> &str {
+        self.uri()
+    }
 }

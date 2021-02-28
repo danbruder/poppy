@@ -35,3 +35,16 @@ impl UserRepo for DbUserRepo {
         Ok(None)
     }
 }
+
+#[derive(Clone)]
+pub struct PhotoRepo {}
+
+#[async_trait]
+impl crate::repo::PhotoRepo for PhotoRepo {
+    async fn list(&self) -> Result<Vec<Photo>> {
+        let photos = sqlx::query_as!(Photo, "SELECT uri FROM photo")
+            .fetch_all(&*POOL)
+            .await?;
+        Ok(photos)
+    }
+}

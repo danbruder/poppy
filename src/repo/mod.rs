@@ -9,3 +9,8 @@ pub trait UserRepo {
     async fn by_id(&self, id: Uuid) -> Option<User>;
     async fn by_email(&self, email: &str) -> Result<Option<User>>;
 }
+
+#[async_trait]
+pub trait PhotoRepo {
+    async fn list(&self) -> Result<Vec<Photo>>;
+}

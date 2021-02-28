@@ -65,7 +65,7 @@ pub fn get_routes() -> impl warp::Filter<Extract = impl Reply> + Clone {
     });
 
     let qm_schema = schema();
-    let qm_state = warp::any().map(move || Context {});
+    let qm_state = warp::any().map(move || Context::new());
     let qm_graphql_filter = juniper_warp::make_graphql_filter(qm_schema, qm_state.boxed());
 
     let root_node = Arc::new(schema());
@@ -75,7 +75,7 @@ pub fn get_routes() -> impl warp::Filter<Extract = impl Reply> + Clone {
         .map(move |ws: warp::ws::Ws| {
             let root_node = root_node.clone();
             ws.on_upgrade(move |websocket| async move {
-                serve_graphql_ws(websocket, root_node, ConnectionConfig::new(Context {}))
+                serve_graphql_ws(websocket, root_node, ConnectionConfig::new(Context::new()))
                     .map(|r| {
                         if let Err(e) = r {
                             println!("Websocket error: {}", e);

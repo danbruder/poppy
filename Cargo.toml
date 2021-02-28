@@ -5,11 +5,11 @@ authors = ["Dan Bruder <danbruder@hey.com>"]
 edition = "2018"
 
 [dependencies]
-juniper_codegen = { git = "https://github.com/graphql-rust/juniper", rev = "f3170c7adf4405cc119d2129f78a591fe2fcd32b"}
-juniper = { git = "https://github.com/graphql-rust/juniper", rev = "f3170c7adf4405cc119d2129f78a591fe2fcd32b"  }
-juniper_warp = { git = "https://github.com/graphql-rust/juniper", rev = "f3170c7adf4405cc119d2129f78a591fe2fcd32b", features = ["subscriptions"]}
-juniper_subscriptions = { git = "https://github.com/graphql-rust/juniper", rev = "f3170c7adf4405cc119d2129f78a591fe2fcd32b"}
-juniper_graphql_ws = { git = "https://github.com/graphql-rust/juniper", rev = "f3170c7adf4405cc119d2129f78a591fe2fcd32b"}
+juniper_codegen = "0.15"
+juniper = "0.15"
+juniper_warp = {version = "0.6", features = ["subscriptions"]}
+juniper_subscriptions = "0.15"
+juniper_graphql_ws = "0.2"
 
 env_logger = "0.8.1"
 futures = "0.3.1"
@@ -33,3 +33,5 @@ sqlx = { version = "0.4.0", features = [ "runtime-tokio-native-tls", "sqlite", "
 async-trait = "0.1.42"
 bcrypt = "0.9.0"
 dotenv = "0.15.0"
+derive_more = "0.99.0"
+derive-new = "0.5.9"

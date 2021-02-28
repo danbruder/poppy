@@ -6,7 +6,7 @@ pub fn capture_message_error(_err: Error) {}
 
 pub type Result<T> = std::result::Result<T, Error>;
 
-#[derive(Clone, Error, Debug, PartialEq)]
+#[derive(Error, Debug)]
 pub enum Error {
     #[error("Serialization Error: {0}")]
     SerdeError(String),
@@ -24,9 +24,9 @@ pub enum Error {
 
     #[error("Invalid Timestamp")]
     InvalidTimestamp(chrono::format::ParseError),
-    // #[error("Database Error: {0}")]
-    // DatabaseError(String),
 
+    #[error(transparent)]
+    DatabaseError(#[from] sqlx::Error),
     // #[error("Access denied")]
     // AccessDenied,
 
@@ -43,7 +43,7 @@ where
 {
     fn into_field_error(self) -> FieldError<S> {
         log::error!("{:?}", &self);
-        capture_message_error(self.clone());
+        //capture_message_error(self.clone());
 
         match self {
             Error::SerdeError(e) => {
@@ -63,33 +63,32 @@ where
             Error::InvalidDecimal => FieldError::new(
                 "INVALID_DECIMAL",
                 graphql_value!({ "message": "Invalid decimal" }),
-            ), // Error::DatabaseError(e) => {
-               //     let err = Error::DatabaseError(e.clone());
-               //     let message = format!("{:?}", e);
-               //     log::error!("Database error: {:?}", e);
-               //     //mightybadger::notify_std_error(&err);
-               //     FieldError::new("DATABASE_ERROR", graphql_value!({ "message": message }))
-               // }
-               // Error::InvalidId => {
-               //     let message = "Invalid Id".to_string();
-               //     log::error!("Invalid ID");
-               //     FieldError::new("INVALID_ID", graphql_value!({ "message": message }))
-               // }
-               // Error::NotFound => {
-               //     log::error!("Not found");
-               //     FieldError::new("NOT_FOUND", graphql_value!({ "message": "Not found" }))
-               // }
-               // Error::AccessDenied => {
-               //     log::error!("Access denied");
-               //     FieldError::new(
-               //         "ACCESS_DENIED",
-               //         graphql_value!({ "message": "Access denied" }),
-               //     )
-               // }
-               // Error::ValidationError(message) => {
-               //     log::error!("Validation error {}", &message);
-               //     FieldError::new("VALIDATION_ERROR", graphql_value!({ "message": message }))
-               // }
+            ),
+            Error::DatabaseError(e) => {
+                let message = format!("{:?}", e);
+                log::error!("Database error: {:?}", e);
+                //mightybadger::notify_std_error(&err);
+                FieldError::new("DATABASE_ERROR", graphql_value!({ "message": message }))
+            } // Error::InvalidId => {
+              //     let message = "Invalid Id".to_string();
+              //     log::error!("Invalid ID");
+              //     FieldError::new("INVALID_ID", graphql_value!({ "message": message }))
+              // }
+              // Error::NotFound => {
+              //     log::error!("Not found");
+              //     FieldError::new("NOT_FOUND", graphql_value!({ "message": "Not found" }))
+              // }
+              // Error::AccessDenied => {
+              //     log::error!("Access denied");
+              //     FieldError::new(
+              //         "ACCESS_DENIED",
+              //         graphql_value!({ "message": "Access denied" }),
+              //     )
+              // }
+              // Error::ValidationError(message) => {
+              //     log::error!("Validation error {}", &message);
+              //     FieldError::new("VALIDATION_ERROR", graphql_value!({ "message": message }))
+              // }
         }
     }
 }
