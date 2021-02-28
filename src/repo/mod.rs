@@ -14,5 +14,6 @@ pub trait UserRepo {
 #[async_trait]
 pub trait PhotoRepo {
     async fn list(&self) -> Result<Vec<Photo>>;
-    async fn store_file(&self, bytes: Bytes) -> Result<File>;
+    async fn store_file(&self, name: String, bytes: Bytes) -> Result<()>;
+    async fn create(&self, input: &Photo) -> Result<()>;
 }

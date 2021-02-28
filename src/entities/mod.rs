@@ -5,6 +5,7 @@ pub struct File {
 }
 
 pub struct Photo {
+    pub id: String,
     pub uri: String,
 }
 

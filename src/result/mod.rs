@@ -26,6 +26,9 @@ pub enum Error {
     InvalidTimestamp(chrono::format::ParseError),
 
     #[error(transparent)]
+    IoError(#[from] std::io::Error),
+
+    #[error(transparent)]
     DatabaseError(#[from] sqlx::Error),
     // #[error("Access denied")]
     // AccessDenied,
@@ -69,12 +72,11 @@ where
                 log::error!("Database error: {:?}", e);
                 //mightybadger::notify_std_error(&err);
                 FieldError::new("DATABASE_ERROR", graphql_value!({ "message": message }))
-            } // Error::InvalidId => {
-              //     let message = "Invalid Id".to_string();
-              //     log::error!("Invalid ID");
-              //     FieldError::new("INVALID_ID", graphql_value!({ "message": message }))
-              // }
-              // Error::NotFound => {
+            }
+            Error::IoError(e) => {
+                let message = format!("{:?}", e);
+                FieldError::new("IO_ERROR", graphql_value!({ "message": message }))
+            } // Error::NotFound => {
               //     log::error!("Not found");
               //     FieldError::new("NOT_FOUND", graphql_value!({ "message": "Not found" }))
               // }

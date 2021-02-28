@@ -2,6 +2,7 @@ use crate::entities::Photo;
 use crate::repo::PhotoRepo;
 use crate::result::Result;
 use bytes::Bytes;
+use uuid::Uuid;
 
 #[derive(Clone)]
 pub struct PhotoUseCase<U>
@@ -12,8 +13,8 @@ where
 }
 
 pub struct UploadInput {
-    name: String,
-    file: Bytes,
+    pub name: String,
+    pub file: Bytes,
 }
 
 impl<U> PhotoUseCase<U>
@@ -29,7 +30,13 @@ where
     }
 
     pub async fn upload(&self, input: UploadInput) -> Result<Photo> {
+        self.photo_repo.store_file(input.name, input.file).await?;
+        let photo = Photo {
+            id: Uuid::new_v4().to_string(),
+            uri: "name.png".into(),
+        };
+        self.photo_repo.create(&photo).await?;
 
-        //self.photo_repo.list().await
+        Ok(photo)
     }
 }

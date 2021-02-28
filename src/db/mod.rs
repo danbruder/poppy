@@ -2,6 +2,8 @@ use async_trait::async_trait;
 use bytes::Bytes;
 use sqlx::sqlite::SqlitePool;
 use std::env;
+use tokio::fs::File;
+use tokio::io::AsyncWriteExt;
 use uuid::Uuid;
 
 use crate::entities::*;
@@ -43,15 +45,28 @@ pub struct PhotoRepo {}
 #[async_trait]
 impl crate::repo::PhotoRepo for PhotoRepo {
     async fn list(&self) -> Result<Vec<Photo>> {
-        let photos = sqlx::query_as!(Photo, "SELECT uri FROM photo")
+        let photos = sqlx::query_as!(Photo, "SELECT * FROM photo")
             .fetch_all(&*POOL)
             .await?;
         Ok(photos)
     }
 
-    async fn store_file(&self, bytes: Bytes) -> Result<File> {
-        let id = Uuid::new_v4();
-        let mut file = File::create(format!("data/files/{}", id)).await?;
-        file.write_all(b"hello, world!").await?;
+    async fn create(&self, input: &Photo) -> Result<()> {
+        sqlx::query_as!(
+            Photo,
+            "INSERT INTO photo (id, uri) VALUES (?1, ?2)",
+            input.id,
+            input.uri
+        )
+        .execute(&*POOL)
+        .await?;
+
+        Ok(())
+    }
+    async fn store_file(&self, name: String, bytes: Bytes) -> Result<()> {
+        let mut file = File::create(format!("data/files/{}", name)).await?;
+        file.write_all(&bytes).await?;
+
+        Ok(())
     }
 }

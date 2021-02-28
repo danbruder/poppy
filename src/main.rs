@@ -72,8 +72,6 @@ pub fn get_routes() -> impl warp::Filter<Extract = impl Reply> + Clone {
     let qm_state = warp::any().map(move || Context::new());
     let qm_graphql_filter = juniper_warp::make_graphql_filter(qm_schema, qm_state.boxed());
 
-    let root_node = Arc::new(schema());
-
     let public_files = warp::path("public").and(warp::fs::dir("data/files"));
 
     let graphql_route = warp::post()
@@ -160,6 +158,8 @@ async fn mpart(
     mime: Mime,
     body: impl Stream<Item = Result<impl Buf, warp::Error>> + Unpin,
 ) -> Result<impl warp::Reply, Infallible> {
+    let repo = db::PhotoRepo {};
+    let photo = use_cases::PhotoUseCase::new(repo);
     let boundary = mime.get_param("boundary").map(|v| v.to_string()).unwrap();
 
     let mut stream = MultipartStream::new(
@@ -169,12 +169,14 @@ async fn mpart(
 
     while let Ok(Some(mut field)) = stream.try_next().await {
         println!("Field received:{}", field.name().unwrap());
-        if let Ok(filename) = field.filename() {
-            println!("Field filename:{}", filename);
 
-            while let Ok(Some(bytes)) = field.try_next().await {
-                println!("Bytes received:{}", bytes.len());
-            }
+        while let Ok(Some(bytes)) = field.try_next().await {
+            println!("Bytes received:{}", bytes.len());
+            let input = use_cases::UploadInput {
+                name: "hey".into(),
+                file: bytes,
+            };
+            let result = photo.upload(input).await;
         }
     }
 
