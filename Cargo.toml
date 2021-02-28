@@ -32,3 +32,4 @@ tokio = { version = "0.2", features = ["full"]}
 sqlx = { version = "0.4.0", features = [ "runtime-tokio-native-tls", "sqlite", "migrate", "uuid", "chrono", "bigdecimal" ] }
 async-trait = "0.1.42"
 bcrypt = "0.9.0"
+dotenv = "0.15.0"

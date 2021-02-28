@@ -3,6 +3,8 @@ module Pages.Top exposing (Model, Msg, Params, page)
 import Data.Photo as Photo exposing (Photo)
 import Html exposing (..)
 import Html.Attributes exposing (..)
+import Queries.PhotosList
+import RemoteData as RD
 import Shared
 import Spa.Document exposing (Document)
 import Spa.Page as Page exposing (Page)
@@ -36,7 +38,9 @@ type alias Model =
 
 init : Shared.Model -> Url Params -> ( Model, Cmd Msg )
 init shared { params } =
-    ( { photos = Photo.dummy }, Cmd.none )
+    ( { photos = Photo.dummy }
+    , Queries.PhotosList.run GotPhotos
+    )
 
 
 
@@ -44,13 +48,16 @@ init shared { params } =
 
 
 type Msg
-    = ReplaceMe
+    = GotPhotos Queries.PhotosList.Response
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
-        ReplaceMe ->
+        GotPhotos (RD.Success payload) ->
+            ( { model | photos = payload.photos }, Cmd.none )
+
+        _ ->
             ( model, Cmd.none )
 
 

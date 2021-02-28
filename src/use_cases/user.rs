@@ -1,3 +1,5 @@
+use serde::Deserialize;
+
 use crate::repo::UserRepo;
 use crate::result::Result;
 
@@ -8,9 +10,10 @@ where
     user_repo: &'a U,
 }
 
-pub struct RegisterRequest<'a> {
-    pub email: &'a str,
-    pub password: &'a str,
+#[derive(Deserialize)]
+pub struct RegisterRequest {
+    pub email: String,
+    pub password: String,
 }
 
 impl<'a, U> UserUseCase<'a, U>
@@ -21,12 +24,14 @@ where
         Self { user_repo }
     }
 
-    pub async fn register(&self, body: &RegisterRequest<'_>) -> Result<()> {
-        let existing_user = self.user_repo.by_email(body.email).await?;
+    pub async fn register(&self, body: &RegisterRequest) -> Result<String> {
+        let existing_user = self.user_repo.by_email(&body.email).await?;
 
         let hashed = bcrypt::hash(&body.password, bcrypt::DEFAULT_COST)?;
 
-        Ok(())
+        // Check user against hashed
+        panic!("todo");
+        Ok("hello".into())
     }
 }
 

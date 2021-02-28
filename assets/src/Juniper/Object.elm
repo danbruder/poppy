@@ -5,5 +5,5 @@
 module Juniper.Object exposing (..)
 
 
-type User
-    = User
+type Photo
+    = Photo

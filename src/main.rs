@@ -5,10 +5,10 @@ extern crate lazy_static;
 
 use std::convert::Infallible;
 
+use dotenv::dotenv;
 use juniper_graphql_ws::ConnectionConfig;
 use juniper_warp::{playground_filter, subscriptions::serve_graphql_ws};
 use serde_derive::Serialize;
-use sqlx::sqlite::SqlitePool;
 use warp::{http::Response, http::StatusCode, Filter};
 use warp::{Rejection, Reply};
 
@@ -25,18 +25,20 @@ mod integration_tests;
 use graphql::{schema, Context};
 
 lazy_static! {
-    pub static ref POOL: SqlitePool = db::setup();
+    //pub static ref POOL: SqlitePool = db::setup();
     static ref DOMAIN: String = "localhost".into();
 }
 
 #[tokio::main] // or #[tokio::main]
 async fn main() {
+    dotenv().ok();
+
     env::set_var("RUST_LOG", "app");
 
     // Initialize resources
     env_logger::init();
     result::init_error_tracking();
-    db::migrate().await;
+    //db::migrate().await;
 
     let routes = get_routes();
 
@@ -46,6 +48,13 @@ async fn main() {
 
 pub fn get_routes() -> impl warp::Filter<Extract = impl Reply> + Clone {
     let log = warp::log("warp_subscriptions");
+    let cors = warp::cors()
+        .allow_any_origin()
+        .allow_header("content-length")
+        .allow_header("content-type")
+        .allow_header("date")
+        .allow_methods(vec!["GET", "OPTIONS", "POST", "DELETE"]);
+
     // Create a connection pool
     let homepage = warp::path::end().map(|| {
         Response::builder()
@@ -87,8 +96,11 @@ pub fn get_routes() -> impl warp::Filter<Extract = impl Reply> + Clone {
         .and(warp::path("register"))
         .and(warp::body::content_length_limit(1024 * 32))
         .and(warp::body::json())
-        .and_then(|body: serde_json::Value| async {
-            use_cases::register::run(body)
+        .and_then(|body: use_cases::RegisterRequest| async move {
+            let repo = db::DbUserRepo {};
+            let user = use_cases::UserUseCase::new(&repo);
+
+            user.register(&body)
                 .await
                 .map(|session_id| {
                     let reply = warp::reply::json(&"success");
@@ -112,6 +124,7 @@ pub fn get_routes() -> impl warp::Filter<Extract = impl Reply> + Clone {
         .or(register_route)
         .recover(handle_rejection)
         .with(log)
+        .with(cors)
 }
 
 /// An API error serializable to JSON.

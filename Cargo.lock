@@ -1352,6 +1352,7 @@ dependencies = [
  "bcrypt",
  "bigdecimal",
  "chrono",
+ "dotenv",
  "env_logger",
  "futures",
  "juniper",

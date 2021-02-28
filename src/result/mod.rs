@@ -1,4 +1,4 @@
-use juniper::{graphql_value, FieldError, IntoFieldError};
+use juniper::{graphql_value, FieldError, IntoFieldError, ScalarValue};
 use thiserror::Error;
 
 pub fn init_error_tracking() {}
@@ -37,8 +37,11 @@ pub enum Error {
     // NotFound,
 }
 
-impl IntoFieldError for Error {
-    fn into_field_error(self) -> FieldError {
+impl<S> IntoFieldError<S> for Error
+where
+    S: ScalarValue,
+{
+    fn into_field_error(self) -> FieldError<S> {
         log::error!("{:?}", &self);
         capture_message_error(self.clone());
 

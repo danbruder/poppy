@@ -19,13 +19,8 @@ import Juniper.ScalarCodecs
 import Juniper.Union
 
 
-type alias UsersRequiredArguments =
-    { id : Int }
-
-
-users :
-    UsersRequiredArguments
-    -> SelectionSet decodesTo Juniper.Object.User
+photos :
+    SelectionSet decodesTo Juniper.Object.Photo
     -> SelectionSet (List decodesTo) RootQuery
-users requiredArgs object_ =
-    Object.selectionForCompositeField "users" [ Argument.required "id" requiredArgs.id Encode.int ] object_ (identity >> Decode.list)
+photos object____ =
+    Object.selectionForCompositeField "photos" [] object____ (identity >> Decode.list)

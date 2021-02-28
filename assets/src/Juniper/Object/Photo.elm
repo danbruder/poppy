@@ -2,7 +2,7 @@
 -- https://github.com/dillonkearns/elm-graphql
 
 
-module Juniper.Subscription exposing (..)
+module Juniper.Object.Photo exposing (..)
 
 import Graphql.Internal.Builder.Argument as Argument exposing (Argument)
 import Graphql.Internal.Builder.Object as Object
@@ -10,7 +10,7 @@ import Graphql.Internal.Encode as Encode exposing (Value)
 import Graphql.Operation exposing (RootMutation, RootQuery, RootSubscription)
 import Graphql.OptionalArgument exposing (OptionalArgument(..))
 import Graphql.SelectionSet exposing (SelectionSet)
-import Json.Decode as Decode exposing (Decoder)
+import Json.Decode as Decode
 import Juniper.InputObject
 import Juniper.Interface
 import Juniper.Object
@@ -19,8 +19,6 @@ import Juniper.ScalarCodecs
 import Juniper.Union
 
 
-users :
-    SelectionSet decodesTo Juniper.Object.User
-    -> SelectionSet decodesTo RootSubscription
-users object_ =
-    Object.selectionForCompositeField "users" [] object_ identity
+url : SelectionSet String Juniper.Object.Photo
+url =
+    Object.selectionForField "String" "url" [] Decode.string
