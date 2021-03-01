@@ -7,7 +7,6 @@ use tokio::io::AsyncWriteExt;
 use uuid::Uuid;
 
 use crate::entities::*;
-use crate::repo::*;
 use crate::result::*;
 
 lazy_static! {
@@ -26,10 +25,11 @@ pub async fn migrate() {
         .expect("Failed to run migrations");
 }
 
-pub struct DbUserRepo {}
+#[derive(Clone)]
+pub struct UserRepo;
 
 #[async_trait]
-impl UserRepo for DbUserRepo {
+impl crate::repo::UserRepo for UserRepo {
     async fn by_id(&self, id: Uuid) -> Option<User> {
         None
     }
@@ -40,7 +40,7 @@ impl UserRepo for DbUserRepo {
 }
 
 #[derive(Clone)]
-pub struct PhotoRepo {}
+pub struct PhotoRepo;
 
 #[async_trait]
 impl crate::repo::PhotoRepo for PhotoRepo {

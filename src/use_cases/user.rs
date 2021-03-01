@@ -3,20 +3,21 @@ use serde::Deserialize;
 use crate::repo::UserRepo;
 use crate::result::Result;
 
-pub struct UserUseCase<'a, U>
+#[derive(Clone, new)]
+pub struct UserUseCase<U>
 where
     U: UserRepo,
 {
-    user_repo: &'a U,
+    user_repo: U,
 }
 
-#[derive(Deserialize, new)]
+#[derive(Deserialize)]
 pub struct RegisterRequest {
     pub email: String,
     pub password: String,
 }
 
-impl<'a, U> UserUseCase<'a, U>
+impl<U> UserUseCase<U>
 where
     U: UserRepo,
 {

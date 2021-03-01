@@ -84,26 +84,28 @@ pub fn get_routes() -> impl warp::Filter<Extract = impl Reply> + Clone {
         .and(warp::path("register"))
         .and(warp::body::content_length_limit(1024 * 32))
         .and(warp::body::json())
-        .and_then(|body: use_cases::RegisterRequest| async move {
-            let repo = db::DbUserRepo {};
-            let user = use_cases::UserUseCase::new(&repo);
-
-            user.register(&body)
-                .await
-                .map(|session_id| {
-                    let reply = warp::reply::json(&"success");
-                    warp::reply::with_header(
-                        reply,
-                        "Set-Cookie",
-                        format!(
-                            "session={}; Domain={}; Secure; HttpOnly",
-                            session_id,
-                            DOMAIN.as_str()
-                        ),
-                    )
-                })
-                .map_err(|_| warp::reject::not_found())
-        });
+        .and(qm_state)
+        .and_then(
+            |body: use_cases::RegisterRequest, context: Context| async move {
+                context
+                    .user
+                    .register(&body)
+                    .await
+                    .map(|session_id| {
+                        let reply = warp::reply::json(&"success");
+                        warp::reply::with_header(
+                            reply,
+                            "Set-Cookie",
+                            format!(
+                                "session={}; Domain={}; Secure; HttpOnly",
+                                session_id,
+                                DOMAIN.as_str()
+                            ),
+                        )
+                    })
+                    .map_err(|_| warp::reject::not_found())
+            },
+        );
 
     let playground_route = warp::get()
         .and(warp::path("playground"))
@@ -178,7 +180,7 @@ async fn mpart(
                 name: "hey".into(),
                 file: bytes,
             };
-            let result = photo.upload(input).await;
+            let _ = ctx.photo.upload(input).await;
         }
     }
 
