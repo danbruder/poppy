@@ -3,6 +3,8 @@ use std::{env, sync::Arc};
 
 #[macro_use]
 extern crate lazy_static;
+#[macro_use]
+extern crate derive_new;
 
 use std::convert::Infallible;
 
@@ -112,6 +114,7 @@ pub fn get_routes() -> impl warp::Filter<Extract = impl Reply> + Clone {
         .and(warp::post())
         .and(warp::header::<Mime>("content-type"))
         .and(warp::body::stream())
+        .and(qm_state)
         .and_then(mpart);
 
     graphql_route
@@ -157,9 +160,8 @@ async fn handle_rejection(err: Rejection) -> Result<impl Reply, Infallible> {
 async fn mpart(
     mime: Mime,
     body: impl Stream<Item = Result<impl Buf, warp::Error>> + Unpin,
+    ctx: Context,
 ) -> Result<impl warp::Reply, Infallible> {
-    let repo = db::PhotoRepo {};
-    let photo = use_cases::PhotoUseCase::new(repo);
     let boundary = mime.get_param("boundary").map(|v| v.to_string()).unwrap();
 
     let mut stream = MultipartStream::new(

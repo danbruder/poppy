@@ -3,11 +3,12 @@ use juniper::{graphql_object, EmptySubscription, RootNode};
 use crate::db::PhotoRepo;
 use crate::entities::Photo;
 use crate::result::Result;
-use crate::use_cases::PhotoUseCase;
+use crate::use_cases::{PhotoUseCase, UserUseCase};
 
 #[derive(Clone)]
 pub struct Context {
     photo: PhotoUseCase<PhotoRepo>,
+    user: UserUseCase<UserRepo>,
 }
 
 impl juniper::Context for Context {}
@@ -15,7 +16,8 @@ impl juniper::Context for Context {}
 impl Context {
     pub fn new() -> Self {
         Self {
-            photo: PhotoUseCase::new(PhotoRepo {}),
+            photo: PhotoUseCase::new(PhotoRepo),
+            user: UserUseCase::new(UserRepo),
         }
     }
 }

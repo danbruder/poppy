@@ -10,7 +10,7 @@ where
     user_repo: &'a U,
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, new)]
 pub struct RegisterRequest {
     pub email: String,
     pub password: String,
@@ -20,10 +20,6 @@ impl<'a, U> UserUseCase<'a, U>
 where
     U: UserRepo,
 {
-    pub fn new(user_repo: &'a U) -> Self {
-        Self { user_repo }
-    }
-
     pub async fn register(&self, body: &RegisterRequest) -> Result<String> {
         let existing_user = self.user_repo.by_email(&body.email).await?;
 

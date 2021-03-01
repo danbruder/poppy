@@ -4,7 +4,7 @@ use crate::result::Result;
 use bytes::Bytes;
 use uuid::Uuid;
 
-#[derive(Clone)]
+#[derive(Clone, new)]
 pub struct PhotoUseCase<U>
 where
     U: PhotoRepo,
@@ -21,10 +21,6 @@ impl<U> PhotoUseCase<U>
 where
     U: PhotoRepo,
 {
-    pub fn new(photo_repo: U) -> Self {
-        Self { photo_repo }
-    }
-
     pub async fn list(&self) -> Result<Vec<Photo>> {
         self.photo_repo.list().await
     }
