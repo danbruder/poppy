@@ -3,6 +3,7 @@ module Pages.Top exposing (Model, Msg, Params, page)
 import Data.Photo as Photo exposing (Photo)
 import Html exposing (..)
 import Html.Attributes exposing (..)
+import Html.Events exposing (..)
 import Queries.PhotosList
 import RemoteData as RD
 import Shared
@@ -33,12 +34,13 @@ type alias Params =
 
 type alias Model =
     { photos : List Photo
+    , selectedPhoto : Maybe Photo
     }
 
 
 init : Shared.Model -> Url Params -> ( Model, Cmd Msg )
 init shared { params } =
-    ( { photos = Photo.dummy }
+    ( { photos = [], selectedPhoto = Nothing }
     , Queries.PhotosList.run GotPhotos
     )
 
@@ -49,6 +51,8 @@ init shared { params } =
 
 type Msg
     = GotPhotos Queries.PhotosList.Response
+    | ClickedPhoto Photo
+    | ClickedSelectedPhoto
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -56,6 +60,12 @@ update msg model =
     case msg of
         GotPhotos (RD.Success payload) ->
             ( { model | photos = payload.photos }, Cmd.none )
+
+        ClickedPhoto photo ->
+            ( { model | selectedPhoto = Just photo }, Cmd.none )
+
+        ClickedSelectedPhoto ->
+            ( { model | selectedPhoto = Nothing }, Cmd.none )
 
         _ ->
             ( model, Cmd.none )
@@ -85,6 +95,7 @@ view model =
     { title = "Top"
     , body =
         [ viewPhotos model
+        , viewBlackroom model
         ]
     }
 
@@ -97,6 +108,18 @@ viewPhotos model =
 
 viewPhoto : Photo -> Html Msg
 viewPhoto photo =
-    div [ class "h-56 m-1" ]
+    div [ class "h-56 m-1", onClick <| ClickedPhoto <| photo ]
         [ img [ class "h-full ", src photo.url ] []
+        ]
+
+
+viewBlackroom : Model -> Html Msg
+viewBlackroom model =
+    model.selectedPhoto |> Maybe.map viewPhotoInBlackroom |> Maybe.withDefault (span [] [])
+
+
+viewPhotoInBlackroom : Photo -> Html Msg
+viewPhotoInBlackroom photo =
+    div [ class "inset-0 absolute p-20 bg-gray-900 bg-opacity-95", onClick ClickedSelectedPhoto ]
+        [ img [ class "h-full w-full", src photo.url ] []
         ]
