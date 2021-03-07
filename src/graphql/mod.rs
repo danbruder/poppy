@@ -49,10 +49,6 @@ impl Mutation {
 
 #[graphql_object]
 impl Photo {
-    fn uri(&self) -> &str {
-        self.uri()
-    }
-
     fn public_url(&self) -> String {
         self.public_url()
     }
