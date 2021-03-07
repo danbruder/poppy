@@ -173,15 +173,20 @@ async fn mpart(
 
     while let Ok(Some(mut field)) = stream.try_next().await {
         println!("Field received:{}", field.name().unwrap());
-
-        while let Ok(Some(bytes)) = field.try_next().await {
-            println!("Bytes received:{}", bytes.len());
-            let input = use_cases::UploadInput {
-                name: "hey".into(),
-                file: bytes,
-            };
-            let _ = ctx.photo.upload(input).await;
+        let mut name = "".to_string();
+        if let Ok(filename) = field.filename() {
+            name = filename.to_owned();
+            println!("Field filename:{}", filename);
         }
+
+        // while let Ok(Some(bytes)) = field.try_next().await {
+        //     println!("Bytes received:{}", bytes.len());
+        let input = use_cases::UploadInput {
+            name: name.clone(),
+            stream: Box::pin(field),
+        };
+        let _ = ctx.photo.upload(input).await;
+        // }
     }
 
     Ok(format!("Thanks!\n"))

@@ -2,6 +2,8 @@ use crate::entities::Photo;
 use crate::repo::PhotoRepo;
 use crate::result::Result;
 use bytes::Bytes;
+use futures::Stream;
+use std::pin::Pin;
 use uuid::Uuid;
 
 #[derive(Clone, new)]
@@ -12,9 +14,11 @@ where
     photo_repo: U,
 }
 
+type FileStream = Pin<Box<dyn Stream<Item = Result<Option<Bytes>>> + Send>>;
+
 pub struct UploadInput {
     pub name: String,
-    pub file: Bytes,
+    pub stream: FileStream,
 }
 
 impl<U> PhotoUseCase<U>
@@ -26,11 +30,8 @@ where
     }
 
     pub async fn upload(&self, input: UploadInput) -> Result<Photo> {
-        self.photo_repo.store_file(input.name, input.file).await?;
-        let photo = Photo {
-            id: Uuid::new_v4().to_string(),
-            uri: "name.png".into(),
-        };
+        let file = self.photo_repo.store_file(input.bytes).await?;
+        let photo = Photo::new(Uuid::new_v4().to_string(), file.path);
         self.photo_repo.create(&photo).await?;
 
         Ok(photo)

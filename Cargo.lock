@@ -935,6 +935,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "infer"
+version = "0.3.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8906512588cd815b8f759fd0ac11de2a84c985c0f792f70df611e9325c270c1f"
+
+[[package]]
 name = "input_buffer"
 version = "0.3.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1435,6 +1441,7 @@ dependencies = [
  "dotenv",
  "env_logger",
  "futures",
+ "infer",
  "juniper",
  "juniper_codegen",
  "juniper_graphql_ws",
