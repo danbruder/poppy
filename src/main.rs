@@ -53,7 +53,7 @@ async fn main() {
     let routes = get_routes();
 
     log::info!("Listening on 127.0.0.1:8080");
-    warp::serve(routes).run(([127, 0, 0, 1], 8080)).await;
+    warp::serve(routes).run(([0, 0, 0, 0], 8080)).await;
 }
 
 pub fn get_routes() -> impl warp::Filter<Extract = impl Reply> + Clone {

@@ -21,7 +21,6 @@ pub fn setup() -> SqlitePool {
 
 pub async fn migrate() {
     let _ = tokio::fs::File::create("/data/poppy.db").await.unwrap();
-    tokio::fs::create_dir("/data/files").await.unwrap();
 
     sqlx::migrate!()
         .run(&*POOL)
