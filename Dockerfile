@@ -28,6 +28,7 @@ RUN groupadd $APP_USER \
     && mkdir -p ${APP}
 
 COPY --from=builder /poppy/target/release/poppy ${APP}/poppy
+COPY --from=builder /poppy/assets/public ${APP}/assets/public
 
 RUN chown -R $APP_USER:$APP_USER ${APP}
 
