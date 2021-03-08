@@ -120,6 +120,6 @@ viewBlackroom model =
 
 viewPhotoInBlackroom : Photo -> Html Msg
 viewPhotoInBlackroom photo =
-    div [ class "inset-0 absolute p-20 bg-gray-900 bg-opacity-95", onClick ClickedSelectedPhoto ]
+    div [ class "inset-0 fixed p-20 bg-gray-900 bg-opacity-95", onClick ClickedSelectedPhoto ]
         [ img [ class "h-full w-full", src photo.url ] []
         ]
