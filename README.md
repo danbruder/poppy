@@ -1,5 +1,2 @@
-# ⏰ Punch Time Tracking
+# Poppy Photos
 
-Simple time tracking tool
-
-![screenshot](https://github.com/danbruder/punch/raw/main/screenshot.jpg)
