@@ -26,6 +26,9 @@ pub enum Error {
     InvalidTimestamp(chrono::format::ParseError),
 
     #[error(transparent)]
+    MultipartError(#[from] mpart_async::server::MultipartError),
+
+    #[error(transparent)]
     IoError(#[from] std::io::Error),
 
     #[error(transparent)]
@@ -76,6 +79,10 @@ where
             Error::IoError(e) => {
                 let message = format!("{:?}", e);
                 FieldError::new("IO_ERROR", graphql_value!({ "message": message }))
+            }
+            Error::MultipartError(e) => {
+                let message = format!("{:?}", e);
+                FieldError::new("MULTIPART_ERROR", graphql_value!({ "message": message }))
             } // Error::NotFound => {
               //     log::error!("Not found");
               //     FieldError::new("NOT_FOUND", graphql_value!({ "message": "Not found" }))

@@ -16,6 +16,9 @@ use mime::Mime;
 use mpart_async::server::MultipartStream;
 use serde_derive::Serialize;
 use sqlx::sqlite::SqlitePool;
+use tokio::fs::File;
+use tokio::io::AsyncWriteExt; // for write_all()
+use uuid::Uuid;
 use warp::{http::Response, http::StatusCode, Filter};
 use warp::{Rejection, Reply};
 
@@ -147,6 +150,7 @@ async fn handle_rejection(err: Rejection) -> Result<impl Reply, Infallible> {
         code = StatusCode::NOT_FOUND;
         message = "NOT_FOUND";
     } else {
+        dbg!(&err);
         code = StatusCode::INTERNAL_SERVER_ERROR;
         message = "UNHANDLED_REJECTION";
     }
@@ -173,20 +177,27 @@ async fn mpart(
 
     while let Ok(Some(mut field)) = stream.try_next().await {
         println!("Field received:{}", field.name().unwrap());
-        let mut name = "".to_string();
-        if let Ok(filename) = field.filename() {
-            name = filename.to_owned();
-            println!("Field filename:{}", filename);
-        }
 
-        // while let Ok(Some(bytes)) = field.try_next().await {
-        //     println!("Bytes received:{}", bytes.len());
-        let input = use_cases::UploadInput {
-            name: name.clone(),
-            stream: Box::pin(field),
-        };
-        let _ = ctx.photo.upload(input).await;
-        // }
+        let path = |name| format!("data/files/{}", name);
+        let id = Uuid::new_v4();
+        let filename = format!("{}.kind", id);
+
+        let mut file = File::create(path(&filename)).await.unwrap();
+
+        while let Ok(Some(bytes)) = field.try_next().await {
+            println!("Bytes received:{}", bytes.len());
+            file.write_all(&bytes).await.unwrap();
+        }
+        let kind = infer::get_from_path(path(&filename))
+            .expect("file read successfully")
+            .expect("file type is known");
+        let filename_with_kind = format!("{}.{}", id, kind.extension());
+
+        tokio::fs::rename(path(&filename), path(&filename_with_kind))
+            .await
+            .unwrap();
+
+        ctx.photo.create(&filename_with_kind).await.unwrap();
     }
 
     Ok(format!("Thanks!\n"))

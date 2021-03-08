@@ -70,20 +70,4 @@ impl crate::repo::PhotoRepo for PhotoRepo {
 
         Ok(())
     }
-
-    async fn store_file(&self, filestream: FileStream) -> Result<File> {
-        // let kind =
-        //     infer::get(&bytes).ok_or(Error::InternalServerError("Invalid file kind".into()))?;
-        let id = Uuid::new_v4();
-        let filename = format!("{}.png", id);
-        let path = format!("data/files/{}", filename);
-
-        let mut file = fs::File::create(&path).await?;
-
-        while let Ok(Some(bytes)) = filestream.try_next().await {
-            file.poll_write(&bytes).await?;
-        }
-
-        Ok(File::new(path))
-    }
 }
