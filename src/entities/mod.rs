@@ -21,6 +21,6 @@ impl Photo {
         }
     }
     pub fn public_url(&self) -> String {
-        format!("http://localhost:8080/public/{}", &self.uri)
+        format!("/public/{}", &self.uri)
     }
 }

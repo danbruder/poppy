@@ -1,5 +1,4 @@
-use futures::FutureExt as _;
-use std::{env, sync::Arc};
+use std::env;
 
 #[macro_use]
 extern crate lazy_static;
@@ -19,7 +18,7 @@ use sqlx::sqlite::SqlitePool;
 use tokio::fs::File;
 use tokio::io::AsyncWriteExt; // for write_all()
 use uuid::Uuid;
-use warp::{http::Response, http::StatusCode, Filter};
+use warp::{http::StatusCode, Filter};
 use warp::{Rejection, Reply};
 
 mod db;
@@ -67,17 +66,14 @@ pub fn get_routes() -> impl warp::Filter<Extract = impl Reply> + Clone {
         .allow_methods(vec!["GET", "OPTIONS", "POST", "DELETE"]);
 
     // Create a connection pool
-    let homepage = warp::path::end().map(|| {
-        Response::builder()
-            .header("content-type", "text/html")
-            .body("<html><h1>juniper_subscriptions demo</h1><div>visit <a href=\"/playground\">graphql playground</a></html>".to_string())
-    });
-
     let qm_schema = schema();
     let qm_state = warp::any().map(move || Context::new());
     let qm_graphql_filter = juniper_warp::make_graphql_filter(qm_schema, qm_state.boxed());
 
     let public_files = warp::path("public").and(warp::fs::dir("data/files"));
+    let spa_files = warp::path::end().and(warp::fs::file("assets/public/index.html"));
+    let main_js = warp::path("main.js").and(warp::fs::file("assets/public/main.js"));
+    let dist_assets = warp::path("dist").and(warp::fs::dir("assets/public/dist"));
 
     let graphql_route = warp::post()
         .and(warp::path("graphql"))
@@ -110,10 +106,6 @@ pub fn get_routes() -> impl warp::Filter<Extract = impl Reply> + Clone {
             },
         );
 
-    let playground_route = warp::get()
-        .and(warp::path("playground"))
-        .and(juniper_warp::playground_filter("/graphql", None));
-
     // Upload route
     let upload = warp::path!("upload")
         .and(warp::post())
@@ -123,10 +115,11 @@ pub fn get_routes() -> impl warp::Filter<Extract = impl Reply> + Clone {
         .and_then(mpart);
 
     graphql_route
-        .or(playground_route)
-        .or(homepage)
         .or(register_route)
         .or(upload)
+        .or(spa_files)
+        .or(main_js)
+        .or(dist_assets)
         .or(public_files)
         .recover(handle_rejection)
         .with(log)
@@ -150,7 +143,6 @@ async fn handle_rejection(err: Rejection) -> Result<impl Reply, Infallible> {
         code = StatusCode::NOT_FOUND;
         message = "NOT_FOUND";
     } else {
-        dbg!(&err);
         code = StatusCode::INTERNAL_SERVER_ERROR;
         message = "UNHANDLED_REJECTION";
     }

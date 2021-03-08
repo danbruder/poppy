@@ -191,7 +191,7 @@ upload files =
     Http.request
         { method = "POST"
         , headers = []
-        , url = "http://localhost:8080/upload"
+        , url = "/upload"
         , body =
             files
                 |> List.map (Http.filePart "files[]")
