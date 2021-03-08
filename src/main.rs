@@ -43,7 +43,7 @@ lazy_static! {
 async fn main() {
     dotenv().ok();
 
-    env::set_var("RUST_LOG", "app");
+    env::set_var("RUST_LOG", "debug");
 
     // Initialize resources
     env_logger::init();
