@@ -1,12 +1,9 @@
 use async_trait::async_trait;
 use bytes::Bytes;
-use futures::stream::TryStreamExt;
-use futures::FutureExt as _;
+
 use futures::Stream;
 use sqlx::sqlite::SqlitePool;
-use std::env;
 use std::pin::Pin;
-use tokio::fs;
 use tokio::io::AsyncWrite;
 use tokio::io::AsyncWriteExt;
 use uuid::Uuid;
@@ -18,13 +15,14 @@ lazy_static! {
     pub static ref POOL: SqlitePool = setup();
 }
 
-type FileStream = Pin<Box<dyn Stream<Item = Result<Bytes>> + Send>>;
-
 pub fn setup() -> SqlitePool {
     SqlitePool::connect_lazy("/data/poppy.db").expect("Could not connect to database")
 }
 
 pub async fn migrate() {
+    let _ = tokio::fs::File::create("/data/poppy.db").await.unwrap();
+    tokio::fs::create_dir("/data/files").await.unwrap();
+
     sqlx::migrate!()
         .run(&*POOL)
         .await
