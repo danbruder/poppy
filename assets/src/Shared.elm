@@ -71,11 +71,11 @@ view { page, toMsg } model =
         [ div [ class "" ]
             [ header [ class "w-full border-b border-gray-300 flex justify-between" ]
                 [ div [ class "p-6 flex items-center font-bold " ]
-                    [ text "Poppy Photos"
+                    [ a [ class "mx-2 link", href (Route.toString Route.Top) ] [ text "Poppy Photos" ]
                     ]
                 , div [ class "p-6 flex items-center" ]
                     [ a [ class "mx-2 link", href (Route.toString Route.Top) ] [ text "Albums" ]
-                    , a [ class "mx-2 link", href (Route.toString Route.NotFound) ] [ text "Upload" ]
+                    , a [ class "mx-2 link", href (Route.toString Route.Upload) ] [ text "Upload" ]
                     , img [ class "mx-2 w-8 h-8 rounded-full", src "https://danbruder.com/js/../static/myface-d07c1438362080b352d2ef803d3b3f8c.jpeg" ] []
                     ]
                 ]
