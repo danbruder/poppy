@@ -70,7 +70,7 @@ pub fn get_routes() -> impl warp::Filter<Extract = impl Reply> + Clone {
     let qm_state = warp::any().map(move || Context::new());
     let qm_graphql_filter = juniper_warp::make_graphql_filter(qm_schema, qm_state.boxed());
 
-    let public_files = warp::path("public").and(warp::fs::dir("data/files"));
+    let public_files = warp::path("public").and(warp::fs::dir("/data/files"));
     let spa_files = warp::path::end().and(warp::fs::file("assets/public/index.html"));
     let main_js = warp::path("main.js").and(warp::fs::file("assets/public/main.js"));
     let dist_assets = warp::path("dist").and(warp::fs::dir("assets/public/dist"));
@@ -170,7 +170,7 @@ async fn mpart(
     while let Ok(Some(mut field)) = stream.try_next().await {
         println!("Field received:{}", field.name().unwrap());
 
-        let path = |name| format!("data/files/{}", name);
+        let path = |name| format!("/data/files/{}", name);
         let id = Uuid::new_v4();
         let filename = format!("{}.kind", id);
 

@@ -21,8 +21,7 @@ lazy_static! {
 type FileStream = Pin<Box<dyn Stream<Item = Result<Bytes>> + Send>>;
 
 pub fn setup() -> SqlitePool {
-    SqlitePool::connect_lazy(&env::var("DATABASE_URL").expect("DATABASE_URL required"))
-        .expect("Could not connect to database")
+    SqlitePool::connect_lazy("/data/poppy.db").expect("Could not connect to database")
 }
 
 pub async fn migrate() {

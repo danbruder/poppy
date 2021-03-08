@@ -1428,45 +1428,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "p_server"
-version = "0.1.0"
-dependencies = [
- "async-trait",
- "bcrypt",
- "bigdecimal",
- "bytes 1.0.1",
- "chrono",
- "derive-new",
- "derive_more",
- "dotenv",
- "env_logger",
- "futures",
- "infer",
- "juniper",
- "juniper_codegen",
- "juniper_graphql_ws",
- "juniper_subscriptions",
- "juniper_warp",
- "lazy_static",
- "log",
- "mime",
- "mockito",
- "mpart-async",
- "native-tls",
- "reqwest",
- "serde",
- "serde_derive",
- "serde_json",
- "snailquote",
- "sqlx",
- "string_template",
- "thiserror",
- "tokio 1.2.0",
- "uuid",
- "warp 0.3.0",
-]
-
-[[package]]
 name = "parking_lot"
 version = "0.11.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1560,6 +1521,45 @@ name = "pkg-config"
 version = "0.3.19"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "3831453b3449ceb48b6d9c7ad7c96d5ea673e9b470a1dc578c2ce6521230884c"
+
+[[package]]
+name = "poppy"
+version = "0.1.0"
+dependencies = [
+ "async-trait",
+ "bcrypt",
+ "bigdecimal",
+ "bytes 1.0.1",
+ "chrono",
+ "derive-new",
+ "derive_more",
+ "dotenv",
+ "env_logger",
+ "futures",
+ "infer",
+ "juniper",
+ "juniper_codegen",
+ "juniper_graphql_ws",
+ "juniper_subscriptions",
+ "juniper_warp",
+ "lazy_static",
+ "log",
+ "mime",
+ "mockito",
+ "mpart-async",
+ "native-tls",
+ "reqwest",
+ "serde",
+ "serde_derive",
+ "serde_json",
+ "snailquote",
+ "sqlx",
+ "string_template",
+ "thiserror",
+ "tokio 1.2.0",
+ "uuid",
+ "warp 0.3.0",
+]
 
 [[package]]
 name = "ppv-lite86"
