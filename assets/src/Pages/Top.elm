@@ -1,9 +1,11 @@
 module Pages.Top exposing (Model, Msg, Params, page)
 
+import Browser.Events
 import Data.Photo as Photo exposing (Photo)
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
+import Json.Decode as JD
 import Queries.PhotosList
 import RemoteData as RD
 import Shared
@@ -53,6 +55,8 @@ type Msg
     = GotPhotos Queries.PhotosList.Response
     | ClickedPhoto Photo
     | ClickedSelectedPhoto
+    | PressedLetter Char
+    | PressedControl String
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -65,6 +69,9 @@ update msg model =
             ( { model | selectedPhoto = Just photo }, Cmd.none )
 
         ClickedSelectedPhoto ->
+            ( { model | selectedPhoto = Nothing }, Cmd.none )
+
+        PressedControl "Escape" ->
             ( { model | selectedPhoto = Nothing }, Cmd.none )
 
         _ ->
@@ -83,7 +90,22 @@ load shared model =
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
-    Sub.none
+    Browser.Events.onKeyDown keyDecoder
+
+
+keyDecoder : JD.Decoder Msg
+keyDecoder =
+    JD.map toKey (JD.field "key" JD.string)
+
+
+toKey : String -> Msg
+toKey string =
+    case String.uncons string of
+        Just ( char, "" ) ->
+            PressedLetter char
+
+        _ ->
+            PressedControl string
 
 
 
@@ -120,6 +142,8 @@ viewBlackroom model =
 
 viewPhotoInBlackroom : Photo -> Html Msg
 viewPhotoInBlackroom photo =
-    div [ class "inset-0 fixed p-20 bg-gray-900 bg-opacity-95", onClick ClickedSelectedPhoto ]
-        [ img [ class "h-full w-full", src photo.url ] []
+    div [ class "inset-0 fixed p-10 bg-gray-900 bg-opacity-95", onClick ClickedSelectedPhoto ]
+        [ div [ class "flex justify-center items-center h-full w-full" ]
+            [ img [ src photo.url ] []
+            ]
         ]

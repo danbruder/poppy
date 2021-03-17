@@ -1,6 +1,6 @@
 module Pages.Upload exposing (Model, Msg, Params, page)
 
-import Browser
+import Browser.Navigation as Nav
 import File exposing (File)
 import File.Select as Select
 import Html exposing (..)
@@ -9,9 +9,11 @@ import Html.Events exposing (..)
 import Http
 import Json.Decode as D
 import Spa.Document exposing (Document)
+import Spa.Generated.Route as Route
 import Spa.Page as Page exposing (Page)
 import Spa.Url as Url exposing (Url)
 import Task
+import Utils.Route
 
 
 page : Page Params Model Msg
@@ -36,12 +38,13 @@ type alias Model =
     { hover : Bool
     , previews : List String
     , files : List File
+    , key : Nav.Key
     }
 
 
 init : Url Params -> ( Model, Cmd Msg )
-init { params } =
-    ( Model False [] [], Cmd.none )
+init { params, key } =
+    ( Model False [] [] key, Cmd.none )
 
 
 
@@ -50,7 +53,6 @@ init { params } =
 
 type Msg
     = Pick
-    | ClickedUpload
     | DragEnter
     | DragLeave
     | GotFiles File (List File)
@@ -82,6 +84,7 @@ update msg model =
                 [ Task.perform GotPreviews <|
                     Task.sequence <|
                         List.map File.toUrl (file :: files)
+                , (file :: files) |> upload
                 ]
             )
 
@@ -91,10 +94,9 @@ update msg model =
             )
 
         UploadedFile _ ->
-            ( { model | files = [], previews = [] }, Cmd.none )
-
-        ClickedUpload ->
-            ( model, model.files |> upload )
+            ( { model | files = [], previews = [] }
+            , Utils.Route.navigate model.key Route.Top
+            )
 
 
 subscriptions : Model -> Sub Msg
@@ -142,33 +144,8 @@ viewDropzone model =
             button [ onClick Pick, class "bg-indigo-600 text-white p-1 px-3 rounded cursor-pointer" ] [ text "Upload Images" ]
 
           else
-            span [] []
-        , div
-            [ style "display" "flex"
-            , style "align-items" "center"
-            , style "height" "60px"
-            , style "padding" "20px"
-            ]
-            (List.map viewPreview model.previews)
-        , if List.length model.files > 0 then
-            button [ class "bg-indigo-600 text-white p-1 px-3 rounded cursor-pointer", onClick ClickedUpload ] [ text " Upload" ]
-
-          else
-            span [] []
+            button [ class "bg-indigo-600 opacity-50 text-white p-1 px-3 rounded cursor-pointer" ] [ text "Uploading..." ]
         ]
-
-
-viewPreview : String -> Html msg
-viewPreview url =
-    div
-        [ style "width" "60px"
-        , style "height" "60px"
-        , style "background-image" ("url('" ++ url ++ "')")
-        , style "background-position" "center"
-        , style "background-repeat" "no-repeat"
-        , style "background-size" "contain"
-        ]
-        []
 
 
 dropDecoder : D.Decoder Msg

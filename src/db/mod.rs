@@ -1,13 +1,8 @@
 use async_trait::async_trait;
-use bytes::Bytes;
-
-use futures::Stream;
 use sqlx::sqlite::SqlitePool;
-use std::pin::Pin;
-use tokio::io::AsyncWrite;
-use tokio::io::AsyncWriteExt;
 use uuid::Uuid;
 
+use crate::config;
 use crate::entities::*;
 use crate::result::*;
 
@@ -16,12 +11,13 @@ lazy_static! {
 }
 
 pub fn setup() -> SqlitePool {
-    SqlitePool::connect_lazy("/data/poppy.db").expect("Could not connect to database")
+    let url = config::get_database_url();
+    let url = url.to_str();
+    let url = url.unwrap();
+    SqlitePool::connect_lazy(&url).expect("Could not connect to database")
 }
 
 pub async fn migrate() {
-    //let _ = tokio::fs::File::create("/data/poppy.db").await.unwrap();
-
     sqlx::migrate!()
         .run(&*POOL)
         .await
@@ -33,11 +29,11 @@ pub struct UserRepo;
 
 #[async_trait]
 impl crate::repo::UserRepo for UserRepo {
-    async fn by_id(&self, id: Uuid) -> Option<User> {
+    async fn by_id(&self, _id: Uuid) -> Option<User> {
         None
     }
 
-    async fn by_email(&self, email: &str) -> Result<Option<User>> {
+    async fn by_email(&self, _email: &str) -> Result<Option<User>> {
         Ok(None)
     }
 }

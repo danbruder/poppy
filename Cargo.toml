@@ -29,7 +29,7 @@ mockito = "0.28.0"
 snailquote = "0.3.0"
 native-tls = "0.2.6"
 tokio = { version = "1", features = ["full"]}
-sqlx = { version = "0.5.0", features = [ "runtime-tokio-native-tls", "sqlite", "migrate", "uuid", "chrono", "bigdecimal" ] }
+sqlx = { version = "0.5.0", features = [ "runtime-tokio-native-tls", "sqlite", "migrate", "uuid", "chrono", "offline", "bigdecimal" ] }
 async-trait = "0.1.42"
 bcrypt = "0.9.0"
 dotenv = "0.15.0"
@@ -40,3 +40,4 @@ mime = "0.3.16"
 derive-new = "0.5"
 infer = "0.3.4"
 
+imageflow_core = { git = "https://github.com/imazen/imageflow", branch = "main"}

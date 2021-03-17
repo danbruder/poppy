@@ -2,7 +2,7 @@ use juniper::{graphql_value, FieldError, IntoFieldError, ScalarValue};
 use thiserror::Error;
 
 pub fn init_error_tracking() {}
-pub fn capture_message_error(_err: Error) {}
+//pub fn capture_message_error(_err: Error) {}
 
 pub type Result<T> = std::result::Result<T, Error>;
 
@@ -83,21 +83,7 @@ where
             Error::MultipartError(e) => {
                 let message = format!("{:?}", e);
                 FieldError::new("MULTIPART_ERROR", graphql_value!({ "message": message }))
-            } // Error::NotFound => {
-              //     log::error!("Not found");
-              //     FieldError::new("NOT_FOUND", graphql_value!({ "message": "Not found" }))
-              // }
-              // Error::AccessDenied => {
-              //     log::error!("Access denied");
-              //     FieldError::new(
-              //         "ACCESS_DENIED",
-              //         graphql_value!({ "message": "Access denied" }),
-              //     )
-              // }
-              // Error::ValidationError(message) => {
-              //     log::error!("Validation error {}", &message);
-              //     FieldError::new("VALIDATION_ERROR", graphql_value!({ "message": message }))
-              // }
+            }
         }
     }
 }

@@ -16,11 +16,12 @@ use mpart_async::server::MultipartStream;
 use serde_derive::Serialize;
 use sqlx::sqlite::SqlitePool;
 use tokio::fs::File;
-use tokio::io::AsyncWriteExt; // for write_all()
+use tokio::io::AsyncWriteExt;
 use uuid::Uuid;
 use warp::{http::StatusCode, Filter};
 use warp::{Rejection, Reply};
 
+mod config;
 mod db;
 mod entities;
 mod graphql;
@@ -42,12 +43,14 @@ lazy_static! {
 #[tokio::main] // or #[tokio::main]
 async fn main() {
     dotenv().ok();
+    config::init();
 
-    env::set_var("RUST_LOG", "debug");
+    env::set_var("RUST_LOG", "info");
 
     // Initialize resources
     env_logger::init();
     result::init_error_tracking();
+
     db::migrate().await;
 
     let routes = get_routes();
@@ -71,7 +74,8 @@ pub fn get_routes() -> impl warp::Filter<Extract = impl Reply> + Clone {
     let qm_graphql_filter = juniper_warp::make_graphql_filter(qm_schema, qm_state.boxed());
 
     let spa_files = warp::get().and(warp::fs::file("assets/public/index.html"));
-    let public_files = warp::path("public").and(warp::fs::dir("/data/files"));
+    let files_dir = config::files_dir();
+    let public_files = warp::path("public").and(warp::fs::dir(files_dir));
     let main_js = warp::path("main.js").and(warp::fs::file("assets/public/main.js"));
     let dist_assets = warp::path("dist").and(warp::fs::dir("assets/public/dist"));
 
@@ -170,24 +174,26 @@ async fn mpart(
     while let Ok(Some(mut field)) = stream.try_next().await {
         println!("Field received:{}", field.name().unwrap());
 
-        let path = |name| format!("/data/files/{}", name);
         let id = Uuid::new_v4();
         let filename = format!("{}.kind", id);
 
-        let mut file = File::create(path(&filename)).await.unwrap();
+        let mut file = File::create(config::file_path(&filename)).await.unwrap();
 
         while let Ok(Some(bytes)) = field.try_next().await {
             println!("Bytes received:{}", bytes.len());
             file.write_all(&bytes).await.unwrap();
         }
-        let kind = infer::get_from_path(path(&filename))
+        let kind = infer::get_from_path(config::file_path(&filename))
             .expect("file read successfully")
             .expect("file type is known");
         let filename_with_kind = format!("{}.{}", id, kind.extension());
 
-        tokio::fs::rename(path(&filename), path(&filename_with_kind))
-            .await
-            .unwrap();
+        tokio::fs::rename(
+            config::file_path(&filename),
+            config::file_path(&filename_with_kind),
+        )
+        .await
+        .unwrap();
 
         ctx.photo.create(&filename_with_kind).await.unwrap();
     }

@@ -1,0 +1,37 @@
+{
+  "db": "SQLite",
+  "0dd54c173dad8188feb7b98887bed46126510c4f49ad4326e51ccd8666b227cf": {
+    "query": "INSERT INTO photo (id, uri) VALUES (?1, ?2)",
+    "describe": {
+      "columns": [],
+      "parameters": {
+        "Right": 2
+      },
+      "nullable": []
+    }
+  },
+  "2d93e8410e99201223517fef64a43dce11441921f3bd01256a8189379551a820": {
+    "query": "SELECT id, uri FROM photo",
+    "describe": {
+      "columns": [
+        {
+          "name": "id",
+          "ordinal": 0,
+          "type_info": "Text"
+        },
+        {
+          "name": "uri",
+          "ordinal": 1,
+          "type_info": "Text"
+        }
+      ],
+      "parameters": {
+        "Right": 0
+      },
+      "nullable": [
+        false,
+        false
+      ]
+    }
+  }
+}
